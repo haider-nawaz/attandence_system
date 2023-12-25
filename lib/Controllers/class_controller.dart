@@ -2,6 +2,7 @@ import 'dart:ffi';
 
 import 'package:attandence_system/models/course.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_connect/http/src/utils/utils.dart';
@@ -22,7 +23,9 @@ class ClassController extends GetxController {
   void onInit() {
     startTimeController.value.text = "00:00";
     endTimeController.value.text = "00:00";
-    getClasses();
+    if (FirebaseAuth.instance.currentUser != null) {
+      getClasses();
+    }
     super.onInit();
   }
 
@@ -112,5 +115,52 @@ class ClassController extends GetxController {
       Get.snackbar("Error", error.toString(),
           snackPosition: SnackPosition.BOTTOM);
     });
+  }
+
+  final joinedClass = [].obs;
+  void joinClass(String className, String instructorName, String startTime,
+      String endTime) {
+    if (joinedClass.isNotEmpty) {
+      Get.snackbar(
+          "Already joined a class.", "You can join only one class at a time");
+      return;
+    }
+
+    //if current time is between start time and end time only then allow the student to join the class
+    //if not then show a snackbar saying that the class is not active
+
+    //get the current time
+    var now = DateTime.now();
+    //get the start time (5:15 PM)
+    //remove PM or AM from the time
+    //split the time into hours and minutes
+
+    startTime = startTime.replaceAll("AM", "").replaceAll("PM", "");
+    //get the start time
+    var start = DateTime(now.year, now.month, now.day,
+        int.parse(startTime.split(":")[0]), int.parse(startTime.split(":")[1]));
+
+    //get the end time (5:15 PM)
+    //remove PM or AM from the time
+    //split the time into hours and minutes
+    endTime = endTime.replaceAll("AM", "").replaceAll("PM", "");
+
+    //get the end time
+
+    var end = DateTime(now.year, now.month, now.day,
+        int.parse(endTime.split(":")[0]), int.parse(endTime.split(":")[1]));
+
+    //if the current time is between start time and end time then allow the student to join the class
+    if (now.isAfter(start) && now.isBefore(end)) {
+      //allow the student to join the class
+      //add the student to the class
+      joinedClass.add(className);
+      Get.snackbar(
+          "Success", "You have joined the $className class successfully");
+    } else {
+      //show a snackbar saying that the class is not active
+      Get.snackbar("Class not active",
+          "You can join the class only between $startTime and $endTime");
+    }
   }
 }

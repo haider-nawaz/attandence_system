@@ -112,7 +112,9 @@ class LoginScreen extends StatelessWidget {
                                               loginController.isLoading.value =
                                                   false;
                                               Get.offAll(
-                                                  () => const InstructorHome());
+                                                  () => const InstructorHome(
+                                                        isStudent: false,
+                                                      ));
                                             }
                                           },
                                           child: Container(
@@ -140,6 +142,8 @@ class LoginScreen extends StatelessWidget {
                                           onTap: () async {
                                             if (await loginController
                                                 .creatAndUploadUser()) {
+                                              loginController.isLoading.value =
+                                                  false;
                                               Get.offAll(
                                                   () => const StudentHome());
                                             } else {
@@ -172,7 +176,77 @@ class LoginScreen extends StatelessWidget {
                                   height: 10,
                                 ),
                                 InkWell(
-                                  onTap: () async {},
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                        context: context,
+                                        builder: (context) {
+                                          return Padding(
+                                            padding: const EdgeInsets.all(12.0),
+                                            child: Column(
+                                              children: [
+                                                const SizedBox(
+                                                  height: 20,
+                                                ),
+                                                const Text("Login as Student"),
+                                                const SizedBox(
+                                                  height: 20,
+                                                ),
+                                                CustomTextField(
+                                                    controller:
+                                                        loginController.stdpass,
+                                                    icon: Icons.lock,
+                                                    title: "Password"),
+                                                const SizedBox(
+                                                  height: 20,
+                                                ),
+                                                InkWell(
+                                                  onTap: () async {
+                                                    if (await loginController
+                                                        .studentSignIn()) {
+                                                      Get.back();
+
+                                                      // loginController
+                                                      //     .isLoading
+                                                      //     .value = false;
+                                                      Get.offAll(
+                                                        () =>
+                                                            const InstructorHome(
+                                                          isStudent: true,
+                                                        ),
+                                                      );
+                                                    }
+                                                  },
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: kPrimaryColor
+                                                          .withOpacity(0.1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              25),
+                                                    ),
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .width,
+                                                    height: 50,
+                                                    child: const Center(
+                                                      child: Text(
+                                                        "Login",
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            fontSize: 14,
+                                                            color:
+                                                                kPrimaryColor),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        });
+                                  },
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: kPrimaryColor.withOpacity(0.1),

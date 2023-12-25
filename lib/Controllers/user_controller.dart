@@ -65,7 +65,9 @@ class UserController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getCurrentUserDetails();
+    if (FirebaseAuth.instance.currentUser != null) {
+      getCurrentUserDetails();
+    }
     // ever(currUser, (_) {
     //   print("User Changed");
     // });

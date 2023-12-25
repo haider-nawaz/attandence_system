@@ -39,7 +39,11 @@ class MyApp extends StatelessWidget {
         title: 'Flutter Demo',
         theme: theme,
         darkTheme: darkTheme,
-        home: user == null ? const LoginScreen() : const InstructorHome(),
+        home: user == null
+            ? const LoginScreen()
+            : const InstructorHome(
+                isStudent: false,
+              ),
       ),
     );
   }

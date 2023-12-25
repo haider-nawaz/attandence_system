@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:adaptive_theme/adaptive_theme.dart';
+import 'package:attandence_system/Controllers/login_controller.dart';
 import 'package:attandence_system/Controllers/student_controller.dart';
 import 'package:attandence_system/Controllers/user_controller.dart';
 import 'package:attandence_system/Screens/classes_screen.dart';
@@ -18,13 +19,16 @@ import '../Controllers/class_controller.dart';
 import '../models/course.dart';
 
 class InstructorHome extends StatelessWidget {
-  const InstructorHome({super.key});
+  final bool isStudent;
+  const InstructorHome({super.key, required this.isStudent});
 
   @override
   Widget build(BuildContext context) {
     final userController = Get.put(UserController());
     final classController = Get.put(ClassController());
     final stdController = Get.put(StudentController());
+
+    final loginController = Get.put(LoginController());
 
     //if dark mode is on
     Border border = AdaptiveTheme.of(context).mode.isDark
@@ -114,16 +118,16 @@ class InstructorHome extends StatelessWidget {
                                             builder: (context) =>
                                                 CupertinoActionSheet(
                                               title: Text(
-                                                userController.isUserInstructor
-                                                    ? "Instructor"
-                                                    : "Student",
+                                                isStudent
+                                                    ? "Student"
+                                                    : "Instuctor",
                                                 style: GoogleFonts.poppins(
                                                     fontSize: 20,
                                                     fontWeight:
                                                         FontWeight.w500),
                                               ),
                                               message: Text(
-                                                "Name: ${userController.userName}\nEmail: ${userController.userEmail}",
+                                                "Name: ${isStudent ? loginController.currStudent.value!.name : userController.userName}\nEmail: ${isStudent ? loginController.currStudent.value!.id : userController.userEmail}",
                                                 style: GoogleFonts.poppins(
                                                     fontSize: 14,
                                                     fontWeight:
@@ -133,7 +137,9 @@ class InstructorHome extends StatelessWidget {
                                                 CupertinoActionSheetAction(
                                                   onPressed: () {
                                                     //sign out the user
-                                                    userController.signOut();
+                                                    if (!isStudent) {
+                                                      userController.signOut();
+                                                    }
                                                     Navigator.pop(context);
                                                   },
                                                   child: const Text("Sign Out"),
@@ -154,7 +160,9 @@ class InstructorHome extends StatelessWidget {
                                 ],
                               ),
                               Text(
-                                userController.userName,
+                                isStudent
+                                    ? loginController.currStudent.value!.name
+                                    : userController.userName,
                                 style: GoogleFonts.poppins(
                                     fontSize: 50, fontWeight: FontWeight.w500),
                               ),
@@ -169,175 +177,206 @@ class InstructorHome extends StatelessWidget {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 15),
-                    child: Text("Quick Insights",
-                        style: GoogleFonts.poppins(
-                            fontSize: 20, fontWeight: FontWeight.w500)),
-                  ),
-                  GestureDetector(
-                    onTap: () => Get.to(() => StudentScreen(
-                          stds: stdController.students,
-                        )),
-                    child: Container(
-                      height: 100,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: border),
-                      child: Center(
-                        child: ListTile(
-                          // leading: const Icon(Icons.class_),
-                          title: Text(
-                            stdController.students.length.toString(),
-                            style: GoogleFonts.poppins(
-                                fontSize: 40, fontWeight: FontWeight.w500),
-                          ),
-                          subtitle: Text("Enrolled Students",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 14, fontWeight: FontWeight.w500)),
-                          trailing: const Icon(Icons.arrow_forward_ios),
-                        ),
-                      ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 15),
+                      child: Text(
+                          isStudent ? "Enrolled Classes" : "Quick Insights",
+                          style: GoogleFonts.poppins(
+                              fontSize: 20, fontWeight: FontWeight.w500)),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  GestureDetector(
-                    onTap: () => Get.to(() => ClassesScreen(
-                          classes: classController.classes,
-                        )),
-                    child: Container(
-                      height: 100,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: border),
-                      child: Center(
-                        child: ListTile(
-                          // leading: const Icon(Icons.class_),
-                          title: Text(
-                            classController.classes.length.toString(),
-                            style: GoogleFonts.poppins(
-                                fontSize: 40, fontWeight: FontWeight.w500),
-                          ),
-                          subtitle: Text("Active Classes",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 14, fontWeight: FontWeight.w500)),
-                          trailing: const Icon(Icons.arrow_forward_ios),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 15),
-                    child: Text("Quick Actions",
-                        style: GoogleFonts.poppins(
-                            fontSize: 20, fontWeight: FontWeight.w500)),
-                  ),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          showCupertinoModalSheet(
-                            context: context,
-                            builder: (context) => dialogAddStudents(
-                              stdController,
-                              classController.classes,
-                              userController.userUid,
-                              userController.userName,
-                              context,
-                              border,
-                            ),
-                          );
-                        },
-                        child: Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: border),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              //crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  "assets/std.png",
-                                  height: 40,
-                                  width: 40,
-                                ),
-                                Text(
-                                  "Add Students",
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    if (!isStudent) ...[
+                      enrolledStdWidget(stdController, border),
                       const SizedBox(
-                        width: 10,
+                        height: 10,
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          //open a cupertino style bottom sheet
-                          showCupertinoModalSheet(
-                            context: context,
-                            builder: (context) => dialogAddClasses(
-                              classController,
-                              userController.userUid,
-                              userController.userName,
-                              context,
-                              border,
-                            ),
-                          );
-                        },
-                        child: Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: border),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  "assets/classroom.png",
-                                  height: 60,
-                                  width: 60,
-                                ),
-                                Text(
-                                  "Add Class",
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      activeClassesWidget(classController, border),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 15),
+                        child: Text("Quick Actions",
+                            style: GoogleFonts.poppins(
+                                fontSize: 20, fontWeight: FontWeight.w500)),
                       ),
-                    ],
+                      quickActionWidget(context, stdController, classController,
+                          userController, border),
+                    ] else ...[
+                      Obx(
+                        () => classController.loading.value
+                            ? const CircularProgressIndicator()
+                            : enrolledClasses(classController, border),
+                      )
+                    ]
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Row quickActionWidget(
+      BuildContext context,
+      StudentController stdController,
+      ClassController classController,
+      UserController userController,
+      Border border) {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            showCupertinoModalSheet(
+              context: context,
+              builder: (context) => dialogAddStudents(
+                stdController,
+                classController.classes,
+                userController.userUid,
+                userController.userName,
+                context,
+                border,
+              ),
+            );
+          },
+          child: Container(
+            height: 100,
+            width: 100,
+            decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: border),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                //crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    "assets/std.png",
+                    height: 40,
+                    width: 40,
+                  ),
+                  Text(
+                    "Add Students",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                        fontSize: 15, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
+        ),
+        const SizedBox(
+          width: 10,
+        ),
+        GestureDetector(
+          onTap: () {
+            //open a cupertino style bottom sheet
+            showCupertinoModalSheet(
+              context: context,
+              builder: (context) => dialogAddClasses(
+                classController,
+                userController.userUid,
+                userController.userName,
+                context,
+                border,
+              ),
+            );
+          },
+          child: Container(
+            height: 100,
+            width: 100,
+            decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: border),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    "assets/classroom.png",
+                    height: 60,
+                    width: 60,
+                  ),
+                  Text(
+                    "Add Class",
+                    style: GoogleFonts.poppins(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  GestureDetector activeClassesWidget(
+      ClassController classController, Border border) {
+    return GestureDetector(
+      onTap: () => Get.to(() => ClassesScreen(
+            classes: classController.classes,
+          )),
+      child: Container(
+        height: 100,
+        width: double.infinity,
+        decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: border),
+        child: Center(
+          child: ListTile(
+            // leading: const Icon(Icons.class_),
+            title: Obx(() => Text(
+                  classController.classes.length.toString(),
+                  style: GoogleFonts.poppins(
+                      fontSize: 40, fontWeight: FontWeight.w500),
+                )),
+            subtitle: Text("Active Classes",
+                style: GoogleFonts.poppins(
+                    fontSize: 14, fontWeight: FontWeight.w500)),
+            trailing: const Icon(Icons.arrow_forward_ios),
+          ),
+        ),
+      ),
+    );
+  }
+
+  GestureDetector enrolledStdWidget(
+      StudentController stdController, Border border) {
+    return GestureDetector(
+      onTap: () => Get.to(() => StudentScreen(
+            stds: stdController.students,
+          )),
+      child: Container(
+        height: 100,
+        width: double.infinity,
+        decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: border),
+        child: Center(
+          child: ListTile(
+            // leading: const Icon(Icons.class_),
+            title: Obx(
+              () => Text(
+                stdController.students.length.toString(),
+                style: GoogleFonts.poppins(
+                    fontSize: 40, fontWeight: FontWeight.w500),
+              ),
+            ),
+            subtitle: Text("Enrolled Students",
+                style: GoogleFonts.poppins(
+                    fontSize: 14, fontWeight: FontWeight.w500)),
+            trailing: const Icon(Icons.arrow_forward_ios),
+          ),
         ),
       ),
     );
@@ -701,6 +740,105 @@ class InstructorHome extends StatelessWidget {
                 )),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget enrolledClasses(ClassController classController, Border border) {
+    classController.getClasses();
+
+    return Container(
+      height: 500,
+      child: ListView.builder(
+        itemCount: classController.classes.length,
+        itemBuilder: (context, index) {
+          final course = classController.classes[index];
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: _courseWig(course, context, classController),
+          );
+        },
+      ),
+    );
+  }
+
+  _courseWig(Course course, BuildContext context, ClassController controller) {
+    return ListTile(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: AdaptiveTheme.of(context).mode.isDark
+            ? const BorderSide(color: Colors.white)
+            : const BorderSide(color: Colors.black),
+      ),
+      title: Text(
+        course.className,
+        style: GoogleFonts.poppins(
+          fontWeight: FontWeight.w500,
+          fontSize: 20,
+        ),
+      ),
+      subtitle: Text(
+        "Instructor: ${course.instructorName}",
+        style: GoogleFonts.poppins(
+          color: Colors.grey,
+          fontSize: 12,
+        ),
+      ),
+      trailing: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Obx(() => GestureDetector(
+                onTap: () {
+                  if (controller.joinedClass.contains(course.className)) {
+                    controller.joinedClass.remove(course.className);
+                  } else {
+                    controller.joinClass(
+                        course.className,
+                        course.instructorName,
+                        course.startTime,
+                        course.endTime);
+                  }
+                },
+                child: Container(
+                  height: 30,
+                  width: 50,
+                  decoration: BoxDecoration(
+                    color: kPrimaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: kPrimaryColor.withOpacity(0.5),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                      child: Text(
+                          controller.joinedClass.contains(course.className)
+                              ? "Leave"
+                              : "Join",
+                          style: GoogleFonts.poppins(color: Colors.white))),
+                ),
+              )),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.access_time),
+              const SizedBox(width: 5),
+              Text(
+                "${course.startTime} - ${course.endTime}",
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+
+          //a join button
+        ],
       ),
     );
   }

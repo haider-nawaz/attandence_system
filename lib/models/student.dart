@@ -25,7 +25,7 @@ class Student {
       name: map['name'],
       id: map['id'],
       password: map['password'],
-      classes: map['classes'],
+      classes: map['classes'].toList().cast<String>(),
       addedBy: map['addedBy'],
       createdAt: map['createdAt'],
     );

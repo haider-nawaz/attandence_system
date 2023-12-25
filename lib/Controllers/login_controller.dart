@@ -1,4 +1,5 @@
 import 'package:attandence_system/Controllers/user_controller.dart';
+import 'package:attandence_system/models/student.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +10,12 @@ class LoginController extends GetxController {
   var isLoading = false.obs;
   var isSignup = false.obs;
 
+  // a single instance of current logged in student
+  final currStudent = Rxn<Student>();
+
   final emailController = TextEditingController();
   final passController = TextEditingController();
+  final stdpass = TextEditingController();
   final nameController = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
@@ -91,5 +96,32 @@ class LoginController extends GetxController {
       isLoading.value = false;
       return false;
     }
+  }
+
+  Future<bool> studentSignIn() {
+    if (stdpass.text.isEmpty) {
+      return Future.value(false);
+    }
+
+    isLoading.value = true;
+
+    return FirebaseFirestore.instance
+        .collection("students")
+        .where("password", isEqualTo: stdpass.text.toString().trim())
+        .get()
+        .then((value) async {
+      if (value.docs.isNotEmpty) {
+        stdpass.clear();
+        print("Student Signed In");
+        currStudent.value = Student.fromMap(value.docs.first.data());
+        print(currStudent.value!.name);
+
+        isLoading.value = false;
+        return true;
+      } else {
+        isLoading.value = false;
+        return false;
+      }
+    });
   }
 }

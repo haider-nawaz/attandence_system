@@ -1,4 +1,7 @@
+import 'package:attandence_system/Controllers/user_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -16,21 +19,25 @@ class StudentController extends GetxController {
 
   @override
   void onInit() {
-    getStudents();
+    if (FirebaseAuth.instance.currentUser != null) {
+      getStudents();
+    }
+
     super.onInit();
   }
 
   void getStudents() {
     loading.value = true;
     FirebaseFirestore.instance
-        .collection("classes")
-        .orderBy("createdAt", descending: true)
+        .collection("students")
+        .where("addedBy", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
         .get()
         .then((value) {
       students.clear();
       for (var element in value.docs) {
         students.add(Student.fromMap(element.data()));
       }
+
       print("students len ${students.length}");
       loading.value = false;
     }).catchError((error) {
